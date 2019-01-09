@@ -38,9 +38,16 @@ void ThirteenPlayer::Turn(int& playersInRound, int& high, MoveSet& set, int& exp
 
 		if (moves[0] == "pass")
 		{
+			if (controller)
+			{
+				std::cout << "ERROR: Can not pass if setting the round..." << std::endl;
+				set = None;
+				invalid = true;
+				continue;
+			}
 			playersInRound -= 1;
 			pass = true;
-			std::cout << "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" << std::endl;
+			std::cout << std::string(30, '\n') << std::endl;
 			std::cout << stats.name << " passes" << std::endl;
 			return;
 		}
@@ -165,7 +172,7 @@ void ThirteenPlayer::Turn(int& playersInRound, int& high, MoveSet& set, int& exp
 				start = false;
 			}
 			high = maxValue;
-			std::cout << "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" << std::endl;
+			std::cout << std::string(30,'\n') << std::endl;
 			Play(cards);
 		}
 	} while (invalid);
@@ -402,7 +409,7 @@ bool Thirteen::Round(bool& start)
 			std::cout << "Press ENTER for " << players[playerIndex].stats.name << "'s turn...";
 			std::string ready;
 			std::getline(std::cin, ready);
-			std::cout << "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" << std::endl;
+			std::cout << std::string(30, '\n') << std::endl;
 		}
 		players[playerIndex].Turn(playersInRound,high,set,expectedNumberOfCards,start);
 		if (players[playerIndex].handSize <= 0)
