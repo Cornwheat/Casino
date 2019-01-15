@@ -227,8 +227,8 @@ MoveSet ThirteenPlayer::SetControl(int& expectedNumberOfCards)
 
 Thirteen::Thirteen()
 {
-
-	while (1)
+	bool play = true;
+	while (play)
 	{
 		bool start = true;
 		std::cout << std::endl;
@@ -239,34 +239,16 @@ Thirteen::Thirteen()
 		std::cout << std::endl;
 		Deal();
 		while (!Round(start));
-		while (1)
-		{
-			std::string prompt = "Would you like to play again?... (yes/no): ";
-			std::vector<std::string> reply = Player::Input(prompt);
-
-			for (unsigned int strIndex = 0; strIndex < reply[0].length(); strIndex++)
-			{
-				reply[0][strIndex] = tolower(reply[0][strIndex]);
-			}
-			if (reply[0] == "yes" || reply[0] == "y")
-			{
-				break;
-			}
-			else if (reply[0] == "no" || reply[0] == "n")
-			{
-				return;
-			}
-			else
-			{
-				std::cout << "ERROR: Please enter 'yes' or 'no'...\n" << std::endl;
-			}
-		}
+		std::string prompt = "Would you like to play again?... (yes/no): ";
+		play = Player::YesNoInput(prompt);
+		std::cout << std::string(30, '\n') << std::endl;
 	}
-
+	return;
 }
 
 Thirteen::~Thirteen()
 {
+	std::cout << "Thanks for playing..." << std::endl;
 }
 
 int Thirteen::ConvertCardToValue(Card card)
@@ -360,13 +342,13 @@ void Thirteen::Deal()
 {
 	for (unsigned int playerIndex = 0; playerIndex < numberOfPlayers; playerIndex++)
 	{
-		players[playerIndex].handSize = handSize;
-		players[playerIndex].hand.resize(handSize);
-		players[playerIndex].handValues.resize(handSize);
+		players[playerIndex].handSize = maxHandSize;
+		players[playerIndex].hand.resize(maxHandSize);
+		players[playerIndex].handValues.resize(maxHandSize);
 	}
 	Deck deck;
 	deck.Shuffle();
-	for (unsigned int deckIndex = 0; deckIndex < 52; deckIndex++)
+	for (unsigned int deckIndex = 0; deckIndex < deck.deck.size(); deckIndex++)
 	{
 		players[deckIndex % numberOfPlayers].hand[deckIndex / numberOfPlayers] = deck.deck[deckIndex];
 		players[deckIndex % numberOfPlayers].handValues[deckIndex / numberOfPlayers] = ConvertCardToValue(deck.deck[deckIndex]);
@@ -377,7 +359,7 @@ void Thirteen::Deal()
 	}
 	for (unsigned int playerIndex = 0; playerIndex < numberOfPlayers; playerIndex++)
 	{
-		players[playerIndex].SortHand(0, handSize - 1);
+		players[playerIndex].SortHand(0, maxHandSize - 1);
 	}
 }
 

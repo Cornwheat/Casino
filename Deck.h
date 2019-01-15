@@ -6,7 +6,8 @@ enum Suit
 	Spades,
 	Clubs,
 	Diamonds,
-	Hearts
+	Hearts,
+	Wild
 };
 
 enum Value
@@ -23,7 +24,8 @@ enum Value
 	Ten,
 	Jack,
 	Queen,
-	King
+	King,
+	Joker
 };
 
 struct Card
@@ -37,8 +39,13 @@ class Deck
 public:
 	Deck();
 	~Deck();
-	Card deck[52];
+	std::vector<Card> deck;
+	const int DefaultDeckSize = 52;
+
 	void Display();
+	static void DisplayCard(Card card);
+
 	void Shuffle();
+	Card Draw();
 };
 

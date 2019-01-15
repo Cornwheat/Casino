@@ -33,10 +33,10 @@ public:
 	void Deal();
 	bool Round(bool& start);
 
-	static const int numberOfPlayers = 4;
-	static const int handSize = 13;
+	const int numberOfPlayers = 4;
+	const int maxHandSize = 13;
 
-	static int ConvertCardToValue(Card card);
+	int ConvertCardToValue(Card card);
 	static std::string ConvertValueToCard(int input);
 	static std::string CurrentRound(MoveSet set, int high, int expectedNumberOfCards);
 };

@@ -6,6 +6,7 @@ std::vector<PlayerStats> PlayerBase::PlayerBaseStats;
 
 Player::Player()
 {
+	handSize = 0;
 	std::cout << "Enter the name for the player: ";
 	std::string input;
 	std::getline(std::cin,input);
@@ -29,25 +30,39 @@ Player::Player()
 	if (exists)
 	{
 		stats = PlayerBase::PlayerBaseStats[playerIndex];
-		std::cout << stats.name << " exists as PlayerID: " << stats.playerID << std::endl;
+		std::cout << "Welcome back " << stats.name << ". This is your PlayerID: " << stats.playerID << std::endl;
 	}
 	else
 	{
 		PlayerStats newStats;
 		newStats.name = input;
 		newStats.playerID = playerIndex;
+		newStats.money = 1000;
 		newStats.ThirteenWins = 0;
 		PlayerBase::PlayerBaseStats.push_back(newStats);
 		stats = PlayerBase::PlayerBaseStats[playerIndex];
-		std::cout << stats.name << " added as new player PlayerID: " << stats.playerID << std::endl;
+		std::cout << "Hello "<< stats.name << ". You've been added as a new player with PlayerID: " << stats.playerID << std::endl;
 		PlayerBase::PlayerCount++;
 	}
+	return;
+}
+
+Player::Player(bool dealer)
+{
+	stats.name = "Dealer";
+	stats.money = 1000000000;
+	dealer = true;
+	return;
 }
 
 Player::~Player()
 {
-	std::cout << "Goodbye " << stats.name << "..." << std::endl;
-	PlayerBase::PlayerCount--;
+	if (!dealer)
+	{
+		std::cout << "Goodbye " << stats.name << "..." << std::endl;
+		PlayerBase::PlayerCount--;
+		return;
+	}
 }
 
 void Player::DisplayHand()
@@ -59,52 +74,14 @@ void Player::DisplayHand()
 		DisplayCard(handIndex);
 	}
 	std::cout << std::endl;
+	return;
 }
 
 void Player::DisplayCard(int handIndex)
 {
-	switch (hand[handIndex].value)
-	{
-	case Ace: std::cout << "Ace of ";
-			break;
-	case Two: std::cout << "2 of ";
-		break;
-	case Three: std::cout << "3 of ";
-		break;
-	case Four: std::cout << "4 of ";
-		break;
-	case Five: std::cout << "5 of ";
-		break;
-	case Six: std::cout << "6 of ";
-		break;
-	case Seven: std::cout << "7 of ";
-		break;
-	case Eight: std::cout << "8 of ";
-		break;
-	case Nine: std::cout << "9 of ";
-		break;
-	case Ten: std::cout << "10 of ";
-		break;
-	case Jack: std::cout << "Jack of ";
-		break;
-	case Queen: std::cout << "Queen of ";
-		break;
-	case King: std::cout << "King of ";
-		break;
-	}
-	switch (hand[handIndex].suit)
-	{
-	case Spades: std::cout << "Spades" << std::endl;
-		break;
-	case Clubs: std::cout << "Clubs" << std::endl;
-		break;
-	case Diamonds: std::cout << "Diamonds" << std::endl;
-		break;
-	case Hearts: std::cout << "Hearts" << std::endl;
-		break;
-	}
+	Deck::DisplayCard(hand[handIndex]);
+	return;
 }
-
 
 void Player::SortHand(int low, int high)
 {
@@ -114,6 +91,7 @@ void Player::SortHand(int low, int high)
 		SortHand(low, partitionIndex - 1);
 		SortHand(partitionIndex + 1, high);
 	}
+	return;
 }
 
 int Player::SortPartition(int low, int high)
@@ -178,13 +156,38 @@ std::vector<std::string> Player::Input(std::string prompt)
 	return moves;
 }
 
+bool Player::YesNoInput(std::string prompt)
+{
+	while (1)
+	{
+		std::vector<std::string> reply = Player::Input(prompt);
+
+		for (unsigned int strIndex = 0; strIndex < reply[0].length(); strIndex++)
+		{
+			reply[0][strIndex] = tolower(reply[0][strIndex]);
+		}
+		if (reply[0] == "yes" || reply[0] == "y")
+		{
+			return true;
+		}
+		else if (reply[0] == "no" || reply[0] == "n")
+		{
+			return false;
+		}
+		else
+		{
+			std::cout << "ERROR: Please enter 'yes' or 'no'...\n" << std::endl;
+		}
+	}
+}
+
 void Player::Play(std::vector<int> cards)
 {
 	std::cout << stats.name << " played:" << std::endl;
 	for (unsigned int cardIndex = 0; cardIndex < cards.size(); cardIndex++)
 	{
 		DisplayCard(cards[cardIndex]);
-		handValues[cards[cardIndex]] = 0;
+		handValues[cards[cardIndex]] = -1;
 	}
 	std::vector<int> newHandValues;
 	std::vector<Card> newHand;
@@ -199,6 +202,21 @@ void Player::Play(std::vector<int> cards)
 	handValues = newHandValues;
 	hand = newHand;
 	handSize -= cards.size();
+	return;
+}
+
+void Player::DrawCard(Deck& deck)
+{
+	Card draw = deck.Draw();
+	handSize++;
+	hand.push_back(draw);
+	handValues.push_back(ConvertCardToValue(draw));
+	return;
+}
+
+int Player::ConvertCardToValue(Card card)
+{
+	return (int)card.value;
 }
 
 std::vector<int> Player::StringTokensToIntTokens(std::vector<std::string> input)
@@ -210,7 +228,7 @@ std::vector<int> Player::StringTokensToIntTokens(std::vector<std::string> input)
 		{
 			if (input[inputIndex][strIndex] < '0' || input[inputIndex][strIndex] > '9')
 			{
-				std::cout << "ERROR: Entered a non-numeric value when selecting cards to play...\n\nPlease input the number index of the card in your hand to play i.e. your first is card is '0'" << std::endl;
+				std::cout << "ERROR: Entered a non-numeric value..." << std::endl;
 				return {};
 			}
 		}
@@ -230,6 +248,7 @@ void Player::QuickSort(std::vector<int>& input, int low, int high)
 			QuickSort(input, partitionIndex + 1, high);
 		}
 	}
+	return;
 }
 
 int Player::SortPartition(std::vector<int>& input, int low, int high)
