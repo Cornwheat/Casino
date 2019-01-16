@@ -21,12 +21,13 @@ public:
 	void DrawCard(Deck& deck);
 	int Wager(int minumumBet, int maximumBet);
 	void Payout(int winnings);
-	void Options();
+	void Options(Deck& deck);
 	void Insurance();
 	void InsurancePayout();
 	void BJ();
 	void Push();
-	void Surrender();
+	bool Surrender();
+	bool DoubleDown(Deck& deck);
 	void Win();
 	bool Turn(Deck& deck);
 	bool Hit(Deck& deck);
@@ -53,7 +54,7 @@ public:
 	void DisplayTable();
 
 	bool Round();
-	void Deal(Deck deck);
+	void Deal(Deck& deck);
 	void Reset();
 };
 

@@ -101,14 +101,14 @@ void BlackjackPlayer::Payout(int winnings)
 	return;
 }
 
-void BlackjackPlayer::Options()
+void BlackjackPlayer::Options(Deck& deck)
 {
 	DisplayHand();
 	bool invalid = false;
 	do
 	{
 		invalid = false;
-		std::string prompt = "Actions:\n0. None\n1. Surrender\n2. Double Down\n3. Split\n\nChoose if you'd like to take any actions on the draw: ";
+		std::string prompt = "Actions:\n0. None (Play standard)\n1. Surrender\n2. Double Down\n3. Split\n\nChoose if you'd like to take any actions on the draw: ";
 		std::vector<std::string> moves = Input(prompt);
 		for (unsigned int strIndex = 0; strIndex < moves[0].length(); strIndex++)
 		{
@@ -124,17 +124,27 @@ void BlackjackPlayer::Options()
 		}
 		else if (moves[0] == "surrender" || moves[0] == "1")
 		{
-			Surrender();
-			return;
+			if (Surrender())
+			{
+				return;
+			}
+			else
+			{
+				std::cout << std::endl;
+				invalid = true;
+			}
 		}
 		else if (moves[0] == "double" || moves[0] == "2")
 		{
-			// Double Down
-			std::cout << "DOUBLE DOWN: Press ENTER to continue...";
-			std::string Cont;
-			std::getline(std::cin, Cont);
-			std::cout << std::string(30, '\n') << std::endl;
-			return;
+			if (DoubleDown(deck))
+			{
+				return;
+			}
+			else 
+			{
+				std::cout << std::endl;
+				invalid = true;
+			}
 		}
 		else if (moves[0] == "split" || moves[0] == "3")
 		{
@@ -214,7 +224,7 @@ void BlackjackPlayer::Push()
 	return;
 }
 
-void BlackjackPlayer::Surrender()
+bool BlackjackPlayer::Surrender()
 {
 	std::string prompt = "Would you like to surrender to receive half your bet back?... (yes/no): ";
 	bool surrender = YesNoInput(prompt);
@@ -228,8 +238,39 @@ void BlackjackPlayer::Surrender()
 		std::getline(std::cin, Cont);
 		std::cout << std::string(30, '\n') << std::endl;
 	}
-	std::cout << std::endl;
-	return;
+	return surrender;
+}
+
+bool BlackjackPlayer::DoubleDown(Deck& deck)
+{
+	std::string prompt = "Would you like to double down?... (yes/no): ";
+	bool doubleDown = YesNoInput(prompt);
+	if (doubleDown)
+	{
+		int addBet = Wager(0, bet);
+		if (addBet < 0)
+		{
+			return false;
+		}
+		bet += addBet;
+		if (!Hit(deck))
+		{
+			stand = true;
+			std::cout << "Stand at " << sumValue << std::endl;
+			std::cout << "STAND: Press ENTER to continue...";
+			std::string Cont;
+			std::getline(std::cin, Cont);
+			std::cout << std::string(30, '\n') << std::endl;
+		}
+		else
+		{
+			std::cout << "BUST: Press ENTER to continue...";
+			std::string Cont;
+			std::getline(std::cin, Cont);
+			std::cout << std::string(30, '\n') << std::endl;
+		}
+	}
+	return doubleDown;
 }
 
 void BlackjackPlayer::Win()
@@ -425,6 +466,11 @@ bool Blackjack::Round()
 		}
 	}
 
+	if (!players[0].bust)
+	{
+		std::cout << "Dealer Hand Value: " << players[0].sumValue << std::endl;
+	}
+
 	for (unsigned int playerIndex = 1; playerIndex < seats; playerIndex++)
 	{
 		if (!players[playerIndex].bust)
@@ -450,7 +496,7 @@ bool Blackjack::Round()
 	return false;
 }
 
-void Blackjack::Deal(Deck deck)
+void Blackjack::Deal(Deck& deck)
 {
 	std::vector<BlackjackPlayer> currentPlayers;
 	players[0].DrawCard(deck);
@@ -572,8 +618,13 @@ void Blackjack::Deal(Deck deck)
 		}
 		else 
 		{
+			if (players[playerIndex].insurance > 0)
+			{
+				std::cout << players[playerIndex].stats.name << " lost $" << players[playerIndex].insurance << " insurance...(No dealer blackjack)" << std::endl;
+			}
+
 			DisplayDealer();
-			players[playerIndex].Options();
+			players[playerIndex].Options(deck);
 		}
 
 	}
