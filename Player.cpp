@@ -16,6 +16,7 @@ Player::Player()
 		std::cout << "Enter the name for the player: ";
 		std::getline(std::cin, input);
 	}
+	std::cout << std::endl;
 	bool exists = false;
 	int playerIndex = PlayerBase::PlayerCount;
 	for (unsigned int playerBaseIndex = 0; playerBaseIndex < PlayerBase::PlayerCount; playerBaseIndex++)
@@ -44,6 +45,10 @@ Player::Player()
 		std::cout << "Hello "<< stats.name << ". You've been added as a new player with PlayerID: " << stats.playerID << std::endl;
 		PlayerBase::PlayerCount++;
 	}
+	std::cout << "Press ENTER to continue...";
+	std::string Cont;
+	std::getline(std::cin, Cont);
+	std::cout << std::string(30, '\n') << std::endl;
 	return;
 }
 
@@ -52,6 +57,12 @@ Player::Player(bool dealer)
 	stats.name = "Dealer";
 	stats.money = 1000000000;
 	dealer = true;
+	return;
+}
+
+Player::Player(int playerID)
+{
+	stats = PlayerBase::PlayerBaseStats[playerID];
 	return;
 }
 
@@ -179,6 +190,56 @@ bool Player::YesNoInput(std::string prompt)
 			std::cout << "ERROR: Please enter 'yes' or 'no'...\n" << std::endl;
 		}
 	}
+}
+
+int Player::Wager(int minimumBet, int maximumBet)
+{
+	if (minimumBet > maximumBet)
+	{
+		std::cout << "ERROR: Cannot bet higher than minimum bet..." << std::endl;
+		return -1;
+	}
+	int wager = 0;
+	do
+	{
+		wager = 0;
+		std::string betPrompt = "Enter how much you'd like to bet or 'cancel': ";
+		std::vector<std::string> betStrInput = Input(betPrompt);
+		for (unsigned int strIndex = 0; strIndex < betStrInput[0].length(); strIndex++)
+		{
+			betStrInput[0][strIndex] = tolower(betStrInput[0][strIndex]);
+		}
+		if (betStrInput[0] == "cancel")
+		{
+			return -1;
+		}
+		else
+		{
+			std::vector<int> betInput = StringTokensToIntTokens(betStrInput);
+			if (betInput.size() == 0)
+			{
+				continue;
+			}
+			wager = betInput[0];
+			if (wager < minimumBet)
+			{
+				std::cout << "ERROR: Please bet a value higher than the minimum $" << minimumBet << " or 'cancel'..." << std::endl;
+			}
+			if (wager > maximumBet)
+			{
+				std::cout << "ERROR: Cannot bet more than $" << maximumBet << "..." << std::endl;
+				wager = -1;
+			}
+		}
+	} while (wager < minimumBet);
+	return wager;
+}
+
+void Player::Payout(int winnings)
+{
+	stats.money += winnings;
+	PlayerBase::PlayerBaseStats[stats.playerID].money += winnings;
+	return;
 }
 
 void Player::Play(std::vector<int> cards)

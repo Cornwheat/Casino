@@ -17,19 +17,25 @@ public:
 	int insurance;
 	bool bust;
 	bool stand;
+	int splitValue;
+	int splitBet;
 
 	void DrawCard(Deck& deck);
-	int Wager(int minumumBet, int maximumBet);
-	void Payout(int winnings);
+	bool Turn(Deck& deck);
 	void Options(Deck& deck);
+
+	void BJ();
 	void Insurance();
 	void InsurancePayout();
-	void BJ();
 	void Push();
+	void Push(int split);
 	bool Surrender();
 	bool DoubleDown(Deck& deck);
+	bool Split(Deck& deck);
+
 	void Win();
-	bool Turn(Deck& deck);
+	void Win(int split);
+
 	bool Hit(Deck& deck);
 	void ReduceAce();
 	
@@ -42,8 +48,8 @@ public:
 	Blackjack();
 	~Blackjack();
 
-	const int maxNumberOfPlayers = 8;
-	const int minimumBet = 10;
+	static const int maxNumberOfPlayers = 8;
+	static const int minimumBet = 10;
 
 	BlackjackPlayer dealer = BlackjackPlayer(true);
 	unsigned int seats;

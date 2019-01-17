@@ -24,6 +24,7 @@ class Player
 public:
 	Player();
 	Player(bool dealer);
+	Player(int playerID);
 	~Player();
 
 
@@ -43,6 +44,8 @@ public:
 
 	static std::vector<std::string> Input(std::string prompt);
 	static bool YesNoInput(std::string prompt);
+	int Wager(int minumumBet, int maximumBet);
+	void Payout(int winnings);
 	static std::vector<int> StringTokensToIntTokens(std::vector<std::string> input);
 	void QuickSort(std::vector<int>& input, int low, int high);
 

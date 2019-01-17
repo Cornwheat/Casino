@@ -5,8 +5,10 @@
 #include <iostream>
 #include "deck.h"
 #include "Thirteen.h"
+#include "Blackjack.h"
 
 int main()
 {
-	Thirteen game;
+	Blackjack game;
+	// Thirteen game;
 }

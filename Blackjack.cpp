@@ -50,56 +50,60 @@ void BlackjackPlayer::DrawCard(Deck& deck)
 	return;
 }
 
-int BlackjackPlayer::Wager(int minimumBet, int maximumBet)
+bool BlackjackPlayer::Turn(Deck& deck)
 {
-	if (minimumBet > maximumBet)
+	DisplayHand();
+	bool invalid = true;
+	if (stand == true || bust == true)
 	{
-		std::cout << "ERROR: Cannot bet higher than minimum bet..." << std::endl;
-		return -1;
+		return true;
 	}
-	int wager = 0;
+
 	do
 	{
-		wager = 0;
-		std::string betPrompt = "Enter how much you'd like to bet or 'cancel': ";
-		std::vector<std::string> betStrInput = Input(betPrompt);
-		for (unsigned int strIndex = 0; strIndex < betStrInput[0].length(); strIndex++)
+		invalid = false;
+		std::cout << "Actions:\n0. Stand\n1. Hit\n" << std::endl << stats.name << ":" << std::endl;
+		std::string prompt = "Would you like to 'Stand' or 'Hit'?: ";
+		std::vector<std::string> moves = Input(prompt);
+		for (unsigned int strIndex = 0; strIndex < moves[0].length(); strIndex++)
 		{
-			betStrInput[0][strIndex] = tolower(betStrInput[0][strIndex]);
+			moves[0][strIndex] = tolower(moves[0][strIndex]);
 		}
-		if (betStrInput[0] == "cancel")
+		if (moves[0] == "stand" || moves[0] == "0")
 		{
-			return -1;
+			stand = true;
+			std::cout << stats.name << " stands at " << sumValue << std::endl;
+			std::cout << "STAND: Press ENTER to continue...";
+			std::string Cont;
+			std::getline(std::cin, Cont);
+			std::cout << std::string(30, '\n') << std::endl;
+			return stand;
+		}
+		else if (moves[0] == "hit" || moves[0] == "1")
+		{
+			bust = Hit(deck);
+			if (bust)
+			{
+				std::cout << "BUST: Press ENTER to continue...";
+			}
+			else
+			{
+				std::cout << "HIT: Press ENTER to continue...";
+			}
+			std::string Cont;
+			std::getline(std::cin, Cont);
+			std::cout << std::string(30, '\n') << std::endl;
+			return bust;
 		}
 		else
 		{
-			std::vector<int> betInput = StringTokensToIntTokens(betStrInput);
-			if (betInput.size() == 0)
-			{
-				continue;
-			}
-			wager = betInput[0];
-			if (wager < minimumBet)
-			{
-				std::cout << "ERROR: Please bet a value higher than the minimum $" << minimumBet << " or 'cancel'..." << std::endl;
-			}
-			if (wager > maximumBet)
-			{
-				std::cout << "ERROR: Cannot bet more than $"<< maximumBet << "..." << std::endl;
-				wager = -1;
-			}
+			std::cout << "ERROR: Incorrect input, enter the number or the action to stand or hit...i.e. 'Hit' or '1' to hit" << std::endl;
+			invalid = true;
 		}
-	} while (wager < minimumBet);
-	return wager;
+	} while (invalid);
+	return false;
 }
 
-void BlackjackPlayer::Payout(int winnings)
-{
-	bust = true;
-	stats.money += winnings;
-	PlayerBase::PlayerBaseStats[stats.playerID].money += winnings;
-	return;
-}
 
 void BlackjackPlayer::Options(Deck& deck)
 {
@@ -108,7 +112,8 @@ void BlackjackPlayer::Options(Deck& deck)
 	do
 	{
 		invalid = false;
-		std::string prompt = "Actions:\n0. None (Play standard)\n1. Surrender\n2. Double Down\n3. Split\n\nChoose if you'd like to take any actions on the draw: ";
+		std::cout << "Actions:\n0. None (Play Standard)\n1. Surrender\n2. Double Down\n3. Split\n" << std::endl << stats.name << ":" << std::endl;
+		std::string prompt = "Choose if you'd like to take any actions on the draw: ";
 		std::vector<std::string> moves = Input(prompt);
 		for (unsigned int strIndex = 0; strIndex < moves[0].length(); strIndex++)
 		{
@@ -148,21 +153,34 @@ void BlackjackPlayer::Options(Deck& deck)
 		}
 		else if (moves[0] == "split" || moves[0] == "3")
 		{
-			// Split
-			std::cout << "SPLIT: Press ENTER to continue...";
-			std::string Cont;
-			std::getline(std::cin, Cont);
-			std::cout << std::string(30, '\n') << std::endl;
-			return;
+			if (Split(deck))
+			{
+				return;
+			}
+			else
+			{
+				std::cout << std::endl;
+				invalid = true;
+			}
 		}
 		else
 		{
-			std::cout << "ERROR: Incorrect input, enter the number or the action you want to take...i.e. 'double' or '2' to double down" << std::endl;
+			std::cout << "ERROR: Incorrect input, enter the number or the action you want to take... i.e. 'double' or '2' to double down" << std::endl;
 			invalid = true;
 		}
 	} while (invalid);
 	return;
 }
+
+void BlackjackPlayer::BJ()
+{
+	int winnings = bet * (2.5);
+	std::cout << "Blackjack! " << stats.name << " wins $" << winnings << std::endl;
+	Payout(winnings);
+	bust = true;
+	return;
+}
+
 
 void BlackjackPlayer::Insurance()
 {
@@ -203,24 +221,27 @@ void BlackjackPlayer::Insurance()
 void BlackjackPlayer::InsurancePayout()
 {
 	int winnings = insurance * 2;
-	std::cout << std::endl << stats.name << " wins " << winnings << " from insurance.\n" << std::endl;
+	std::cout << stats.name << " wins $" << winnings << " from insurance." << std::endl;
 	Payout(winnings);
-	return;
-}
-
-void BlackjackPlayer::BJ()
-{
-	int winnings = bet * (2.5);
-	std::cout << "\nBlackjack! " << stats.name << " wins $" << winnings << "\n" << std::endl;
-	Payout(winnings);
+	bust = true;
 	return;
 }
 
 void BlackjackPlayer::Push()
 {
 	int winnings = bet;
-	std::cout << "\nDealer and " << stats.name << " match. Push: $" << winnings << " bet returned\n" << std::endl;
+	std::cout << "Dealer and " << stats.name << " match. Push: $" << winnings << " bet returned" << std::endl;
 	Payout(winnings);
+	bust = true;
+	return;
+}
+
+void BlackjackPlayer::Push(int split)
+{
+	int winnings = splitBet;
+	std::cout << "Dealer and " << stats.name << "'s split hand match. Push: $" << winnings << " bet returned" << std::endl;
+	Payout(winnings);
+	bust = true;
 	return;
 }
 
@@ -233,6 +254,7 @@ bool BlackjackPlayer::Surrender()
 		int winnings = bet/2;
 		std::cout << stats.name << " surrenders. $" << winnings << " returned..." << std::endl;
 		Payout(winnings);
+		bust = true;
 		std::cout << "SURRENDER: Press ENTER to continue...";
 		std::string Cont;
 		std::getline(std::cin, Cont);
@@ -256,7 +278,7 @@ bool BlackjackPlayer::DoubleDown(Deck& deck)
 		if (!Hit(deck))
 		{
 			stand = true;
-			std::cout << "Stand at " << sumValue << std::endl;
+			std::cout << stats.name << " stands at " << sumValue << std::endl;
 			std::cout << "STAND: Press ENTER to continue...";
 			std::string Cont;
 			std::getline(std::cin, Cont);
@@ -264,6 +286,7 @@ bool BlackjackPlayer::DoubleDown(Deck& deck)
 		}
 		else
 		{
+			bust = true;
 			std::cout << "BUST: Press ENTER to continue...";
 			std::string Cont;
 			std::getline(std::cin, Cont);
@@ -271,6 +294,74 @@ bool BlackjackPlayer::DoubleDown(Deck& deck)
 		}
 	}
 	return doubleDown;
+}
+
+bool BlackjackPlayer::Split(Deck& deck)
+{
+	std::string prompt = "Would you like to split?... (yes/no): ";
+	bool split = YesNoInput(prompt);
+	if (split)
+	{
+		if (handValues[0] == 1)
+		{
+			handValues[0] = 11;
+		}
+		if (handValues[0] != handValues[1])
+		{
+			std::cout << "ERROR: Can only split if you have two of the same card..." << std::endl;
+			return false;
+		}
+		splitBet = Wager(Blackjack::minimumBet, stats.money);
+		if (splitBet <= 0)
+		{
+			return false;
+		}
+
+		Card tempHand = hand[1];
+		int tempHandValues = handValues[1];
+		handSize--;
+		hand.pop_back();
+		handValues.pop_back();
+		DrawCard(deck);
+		std::cout << std::endl << stats.name << " splits and in the first hand draws the ";
+		DisplayCard(handSize - 1);
+		sumValue = SumHand();
+		if (sumValue > 21)
+		{
+			ReduceAce();
+		}
+		while (!Turn(deck));
+		sumValue = SumHand();
+		DisplayHand();
+		splitValue = sumValue;
+		std::cout << stats.name << "'s split stands at " << splitValue << std::endl;
+		if (splitValue > 21)
+		{
+			std::cout << "The first hand of the split busts..." << std::endl;
+		}
+		bust = false;
+		stand = false;
+		hand.clear();
+		handValues.clear();
+		handSize = 1;
+		hand.push_back(tempHand);
+		handValues.push_back(tempHandValues);
+		DrawCard(deck);
+		std::cout << stats.name << " second hand draws the ";
+		DisplayCard(handSize - 1);
+		sumValue = SumHand();
+		DisplayHand();
+		if (sumValue > 21)
+		{
+			ReduceAce();
+		}
+		std::cout << "SPLIT: Press ENTER to continue...";
+		std::string Cont;
+		std::getline(std::cin, Cont);
+		std::cout << std::string(30, '\n') << std::endl;
+	}
+
+	return split;
 }
 
 void BlackjackPlayer::Win()
@@ -281,57 +372,12 @@ void BlackjackPlayer::Win()
 	return;
 }
 
-bool BlackjackPlayer::Turn(Deck& deck)
+void BlackjackPlayer::Win(int split)
 {
-	DisplayHand();
-	bool invalid = true;
-	if (stand == true || bust == true)
-	{
-		return true;
-	}
-
-	do
-	{
-		invalid = false;
-		std::string prompt = "Actions:\n0. Stand\n1. Hit\n\nWould you like to 'Stand' or 'Hit'?: ";
-		std::vector<std::string> moves = Input(prompt);
-		for (unsigned int strIndex = 0; strIndex < moves[0].length(); strIndex++)
-		{
-			moves[0][strIndex] = tolower(moves[0][strIndex]);
-		}
-		if (moves[0] == "stand" || moves[0] == "0")
-		{
-			stand = true;
-			std::cout << "Stand at " << sumValue << std::endl;
-			std::cout << "STAND: Press ENTER to continue...";
-			std::string Cont;
-			std::getline(std::cin, Cont);
-			std::cout << std::string(30, '\n') << std::endl;
-			return stand;
-		}
-		else if (moves[0] == "hit" || moves[0] == "1")
-		{
-			bust = Hit(deck);
-			if (bust)
-			{
-				std::cout << "BUST: Press ENTER to continue...";
-			}
-			else
-			{
-				std::cout << "HIT: Press ENTER to continue...";
-			}
-			std::string Cont;
-			std::getline(std::cin, Cont);
-			std::cout << std::string(30, '\n') << std::endl;
-			return bust;
-		}
-		else
-		{
-			std::cout << "ERROR: Incorrect input, enter the number or the action to stand or hit...i.e. 'Hit' or '1' to hit" << std::endl;
-			invalid = true;
-		}
-	} while (invalid);
-	return false;
+	int winnings = (splitBet * 2);
+	std::cout << stats.name << " wins $" << winnings << " with a hand value of " << splitValue << std::endl;
+	Payout(winnings);
+	return;
 }
 
 bool BlackjackPlayer::Hit(Deck& deck)
@@ -347,6 +393,7 @@ bool BlackjackPlayer::Hit(Deck& deck)
 	if (sumValue > 21)
 	{
 		std::cout << stats.name << " busts at " << sumValue << std::endl;
+		bust = true;
 		return true;
 	}
 	return false;
@@ -443,9 +490,23 @@ bool Blackjack::Round()
 
 	std::cout << std::string(30, '\n') << std::endl;
 
+	bool fullBust = true;
 	for (unsigned int playerIndex = 1; playerIndex < seats; playerIndex++)
 	{
 		players[playerIndex].DisplayHand();
+		if (!players[playerIndex].bust || (players[playerIndex].splitValue > 0 && players[playerIndex].splitValue <= 21))
+		{
+			fullBust = false;
+		}
+	}
+	if (fullBust)
+	{
+		std::cout << "All players are out of the round..." << std::endl;
+		std::cout << "Press ENTER to continue...";
+		std::string Cont;
+		std::getline(std::cin, Cont);
+		std::cout << std::string(30, '\n') << std::endl;
+		return false;
 	}
 
 	players[0].DisplayHand();
@@ -468,11 +529,26 @@ bool Blackjack::Round()
 
 	if (!players[0].bust)
 	{
-		std::cout << "Dealer Hand Value: " << players[0].sumValue << std::endl;
+		std::cout << "Dealer Hand Value: " << players[0].sumValue << "\n"<< std::endl;
 	}
 
 	for (unsigned int playerIndex = 1; playerIndex < seats; playerIndex++)
 	{
+		if (players[playerIndex].splitValue > 0 && players[playerIndex].splitValue <= 21)
+		{
+			if (players[playerIndex].splitValue > players[0].sumValue)
+			{
+				players[playerIndex].Win(players[playerIndex].splitValue);
+			}
+			else if (players[playerIndex].splitValue == players[0].sumValue)
+			{
+				players[playerIndex].Push(players[playerIndex].splitValue);
+			}
+			else
+			{
+				std::cout << players[playerIndex].stats.name << " lost the split with a hand value of " << players[playerIndex].splitValue << std::endl;
+			}
+		}
 		if (!players[playerIndex].bust)
 		{
 			if (players[playerIndex].sumValue > players[0].sumValue)
@@ -489,6 +565,8 @@ bool Blackjack::Round()
 			}
 		}
 	}
+
+	std::cout << std::endl;
 	std::cout << "Press ENTER to continue...";
 	std::string Cont;
 	std::getline(std::cin, Cont);
@@ -628,7 +706,7 @@ void Blackjack::Deal(Deck& deck)
 		}
 
 	}
-
+	seats = players.size();
 }
 
 void Blackjack::Reset()
@@ -643,7 +721,8 @@ void Blackjack::Reset()
 		players[playerIndex].stand = false;
 		players[playerIndex].bet = 0;
 		players[playerIndex].insurance = 0;
-
+		players[playerIndex].splitValue = 0;
+		players[playerIndex].splitBet = 0;
 	}
 	return;
 }
